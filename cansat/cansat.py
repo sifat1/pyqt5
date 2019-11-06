@@ -1,195 +1,66 @@
-# -*- coding: utf-8 -*-
+import sys
 
-# Form implementation generated from reading ui file 'ui_cansat.ui'
-#
-# Created by: PyQt5 UI code generator 5.13.0
-#
-# WARNING! All changes made in this file will be lost!
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget, QPushButton
+from PyQt5.QtGui import QIcon
 
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-import threading
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1126, 837)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.horizontalLayoutWidget_2 = QtWidgets.QWidget(self.centralwidget)
-        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(20, 10, 1091, 51))
-        self.horizontalLayoutWidget_2.setObjectName("horizontalLayoutWidget_2")
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_2)
-        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.label_4 = QtWidgets.QLabel(self.horizontalLayoutWidget_2)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_4.setFont(font)
-        self.label_4.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_4.setObjectName("label_4")
-        self.horizontalLayout_2.addWidget(self.label_4)
-        self.label_6 = QtWidgets.QLabel(self.horizontalLayoutWidget_2)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_6.setFont(font)
-        self.label_6.setObjectName("label_6")
-        self.horizontalLayout_2.addWidget(self.label_6)
-        self.label_5 = QtWidgets.QLabel(self.horizontalLayoutWidget_2)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_5.setFont(font)
-        self.label_5.setObjectName("label_5")
-        self.horizontalLayout_2.addWidget(self.label_5)
-        self.horizontalLayoutWidget_4 = QtWidgets.QWidget(self.centralwidget)
-        self.horizontalLayoutWidget_4.setGeometry(QtCore.QRect(20, 70, 1091, 51))
-        self.horizontalLayoutWidget_4.setObjectName("horizontalLayoutWidget_4")
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_4)
-        self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        self.pressure = QtWidgets.QLabel(self.horizontalLayoutWidget_4)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.pressure.setFont(font)
-        self.pressure.setAlignment(QtCore.Qt.AlignCenter)
-        self.pressure.setObjectName("pressure")
-        self.horizontalLayout_4.addWidget(self.pressure)
-        self.temp = QtWidgets.QLabel(self.horizontalLayoutWidget_4)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.temp.setFont(font)
-        self.temp.setObjectName("temp")
-        self.horizontalLayout_4.addWidget(self.temp)
-        self.volt = QtWidgets.QLabel(self.horizontalLayoutWidget_4)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.volt.setFont(font)
-        self.volt.setObjectName("volt")
-        self.horizontalLayout_4.addWidget(self.volt)
-        self.horizontalLayoutWidget_5 = QtWidgets.QWidget(self.centralwidget)
-        self.horizontalLayoutWidget_5.setGeometry(QtCore.QRect(20, 130, 1091, 51))
-        self.horizontalLayoutWidget_5.setObjectName("horizontalLayoutWidget_5")
-        self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_5)
-        self.horizontalLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.label_13 = QtWidgets.QLabel(self.horizontalLayoutWidget_5)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_13.setFont(font)
-        self.label_13.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_13.setObjectName("label_13")
-        self.horizontalLayout_5.addWidget(self.label_13)
-        self.label_14 = QtWidgets.QLabel(self.horizontalLayoutWidget_5)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_14.setFont(font)
-        self.label_14.setObjectName("label_14")
-        self.horizontalLayout_5.addWidget(self.label_14)
-        self.label_15 = QtWidgets.QLabel(self.horizontalLayoutWidget_5)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_15.setFont(font)
-        self.label_15.setObjectName("label_15")
-        self.horizontalLayout_5.addWidget(self.label_15)
-        self.horizontalLayoutWidget_3 = QtWidgets.QWidget(self.centralwidget)
-        self.horizontalLayoutWidget_3.setGeometry(QtCore.QRect(20, 190, 1091, 51))
-        self.horizontalLayoutWidget_3.setObjectName("horizontalLayoutWidget_3")
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_3)
-        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.gps = QtWidgets.QLabel(self.horizontalLayoutWidget_3)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.gps.setFont(font)
-        self.gps.setAlignment(QtCore.Qt.AlignCenter)
-        self.gps.setObjectName("gps")
-        self.horizontalLayout_3.addWidget(self.gps)
-        self.speed = QtWidgets.QLabel(self.horizontalLayoutWidget_3)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.speed.setFont(font)
-        self.speed.setObjectName("speed")
-        self.horizontalLayout_3.addWidget(self.speed)
-        self.time = QtWidgets.QLabel(self.horizontalLayoutWidget_3)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        font.setBold(True)
-        font.setWeight(75)
-        self.time.setFont(font)
-        self.time.setObjectName("time")
-        self.horizontalLayout_3.addWidget(self.time)
-        self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 260, 1101, 451))
-        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QtCore.QRect(390, 750, 161, 51))
-        self.pushButton.setObjectName("pushButton")
-        self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_2.setGeometry(QtCore.QRect(570, 750, 131, 51))
-        self.pushButton_2.setObjectName("pushButton_2")
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+import random
 
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        
-    def update_ui(self):
-        self.temp.setText("MainWindow", "0\'C")
+class App(QMainWindow):
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Amigos"))
-        self.label_4.setText(_translate("MainWindow", "Air Pressure"))
-        self.label_6.setText(_translate("MainWindow", "Tempreature"))
-        self.label_5.setText(_translate("MainWindow", "Battary Volt"))
-        self.pressure.setText(_translate("MainWindow", "0.0 pa"))
-        self.temp.setText(_translate("MainWindow", "0\'C"))
-        self.volt.setText(_translate("MainWindow", "0v"))
-        self.label_13.setText(_translate("MainWindow", "Gps"))
-        self.label_14.setText(_translate("MainWindow", "Speed"))
-        self.label_15.setText(_translate("MainWindow", "Mission Time"))
-        self.gps.setText(_translate("MainWindow", "0 e"))
-        self.speed.setText(_translate("MainWindow", "0m/s"))
-        self.time.setText(_translate("MainWindow", "0sec"))
-        self.pushButton.setText(_translate("MainWindow", "Start"))
-        self.pushButton_2.setText(_translate("MainWindow", "Stop"))
+    def __init__(self):
+        super().__init__()
+        self.left = 10
+        self.top = 10
+        self.title = 'PyQt5 matplotlib example - pythonspot.com'
+        self.width = 640
+        self.height = 400
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle(self.title)
+        self.setGeometry(self.left, self.top, self.width, self.height)
+
+        m = PlotCanvas(self, width=5, height=4)
+        m.move(0,0)
+
+        button = QPushButton('PyQt5 button', self)
+        button.setToolTip('This s an example button')
+        button.move(500,0)
+        button.resize(140,100)
+
+        self.show()
 
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    t = threading.Thread(target=ui.update_ui,
-    args=())
-    t.start()
-    MainWindow.show()
+class PlotCanvas(FigureCanvas):
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot()
+        #self.axes1 = fig.add_subplot(222)
+        FigureCanvas.__init__(self, fig)
+        self.setParent(parent)
+
+        FigureCanvas.setSizePolicy(self,
+                QSizePolicy.Expanding,
+                QSizePolicy.Expanding)
+        FigureCanvas.updateGeometry(self)
+        self.plot()
+
+
+    def plot(self):
+        data = [random.random() for i in range(25)]
+        ax = self.figure.add_subplot(221)
+        ax1 = self.figure.add_subplot(222)
+        ax.plot(data, 'r-')
+        ax.set_title('PyQt Matplotlib Example')
+        self.draw()
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = App()
     sys.exit(app.exec_())

@@ -12,6 +12,16 @@ import sys
 import threading
 import time
 
+import random
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib import style
+
+style.use('fivethirtyeight')
+
+
+
+
 def update_label(label,ser):
     i=0
     while i!=20:
@@ -97,17 +107,54 @@ def window():
     label_mission_time.move(420,180)
     label_mission_time.setStyleSheet("padding-right: 20px;border: 1px solid #EF233C;border-radius: 3PX;background-color: #ffffff;text-align: center")
     
-                                     
-    
-    
+    fig = plt.figure()
+
+    def create_plots():
+        xs = []
+        ys = []
+
+        for i in range(10):
+            x = i
+            y = random.randrange(10)
+
+            xs.append(x)
+            ys.append(y)
+            return xs, ys
+
+    ax1 = fig.add_subplot(221)
+    ax2 = fig.add_subplot(222)
+    ax3 = fig.add_subplot(223)
+    ax4 = fig.add_subplot(224)
+    def animate(i):
+        x,y = create_plots()
+        ax1.clear()
+        ax1.plot(x,y)
+
+        x,y = create_plots()
+        ax2.clear()
+        ax2.plot(x,y)
+
+        x,y = create_plots()
+        ax3.clear()
+        ax3.plot(x,y)
+
+        x,y = create_plots()
+        ax4.clear()
+        ax4.plot(x,y)
+    def plot_show(fig):
+        animation.FuncAnimation(fig,animate, interval=1000)
+        plt.show()
+    t = threading.Thread(target=plot_show,
+                     args=(fig,), name='plot_show')
+    t.start()
     '''
     #create serial data
     ser = serial.Serial("COM3",baudrate=9600,timeout=1)
     t = threading.Thread(target=update_label,
-    args=(label_air_pressure,
-    label_gps,
+                     args=(label_air_pressure,
+      label_gps,
     label_battary,
-    label_temp,
+    abel_temp,
     label_speed,
     label_mission_time,
     ser), name='update_label')
