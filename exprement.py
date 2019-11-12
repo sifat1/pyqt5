@@ -86,8 +86,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hlayout.addWidget(self.label_mission_time_name)
         self.lyt.addLayout(self.hlayout)
         
-        #add button
+        #add csv button
         self.hlayout_button = QtWidgets.QHBoxLayout()
+        #csv status label
+        self.csv_stat_label = QtWidgets.QLabel()
+        self.csv_stat_label.setText("CSV is not saving!")
+        self.csv_stat_label.setStyleSheet("text-align: center;")
+        self.hlayout_button.addWidget(self.csv_stat_label)
         self.btn = QtWidgets.QPushButton()
         self.btn2 = QtWidgets.QPushButton()
         self.btn.setText("Start")
