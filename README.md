@@ -1,4 +1,4 @@
-# pyq5
+# pyqt5
 
 main script is in "exprement.py"
 
