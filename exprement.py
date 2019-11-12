@@ -118,11 +118,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.myFig4 = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
         self.lyt.addWidget(self.myFig4)
         #connect comport
-        self.ser = serial.Serial("COM5",baudrate=9600,timeout=1)
-        #label update thread
-        self.label_change_thread = threading.Thread(target=change_label,
+        self.ser=None
+        try:
+            self.ser = serial.Serial("COM5",baudrate=9600,timeout=1)
+            #label update thread
+            self.label_change_thread = threading.Thread(target=change_label,
                              args=(self.label_air_name,self.ser), name='change_label')
-        self.label_change_thread.start()
+            self.label_change_thread.start()
+        except:
+            self.csv_stat_label.setText("Error: Try reconnecting arduino and restart")
+            self.csv_stat_label.setStyleSheet("color: red;")
         # 3. Show
         self.show()
         return
@@ -234,4 +239,5 @@ if __name__ == "__main__":
     #global alive_change_label_thread
     qapp.exec_()
     alive_change_label_thread = False
-    app.ser.close()
+    if app.ser != None:
+        app.ser.close()
