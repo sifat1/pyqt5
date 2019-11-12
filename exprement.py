@@ -27,19 +27,21 @@ import numpy as np
 import threading
 import serial
 
-
+alive_change_label_thread = True
 air_pres = 10
 accleration = 0
 def change_label(obj,ser):
-    while True:
+    global air_pres,accleration,alive_change_label_thread
+    while True and alive_change_label_thread:
         data = ser.readline().decode("utf-8")
         df = data.split(",")
         if df != ['']:
-            global air_pres,accleration
+            #global air_pres,accleration
             accleration = float(df[1])
             air_pres = int(df[0])
             print(air_pres)
             obj.setText(df[0])
+    print("change_label exited")
 
 def get_next_accelaretion_datapoint():
     return float(accleration)
@@ -56,7 +58,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super().__init__()
         # 1. Window settings
         self.setGeometry(300, 300, 1200, 900)
-        self.setWindowTitle("Matplotlib live plot in PyQt - example 2")
+        self.setWindowTitle("Team Amigos")
         self.frm = QtWidgets.QFrame(self)
         self.frm.setStyleSheet("QWidget { background-color: #eeeeec; }")
         self.lyt = QtWidgets.QVBoxLayout()
@@ -83,6 +85,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.label_mission_time_name.setText("Time: 0sec")
         self.hlayout.addWidget(self.label_mission_time_name)
         self.lyt.addLayout(self.hlayout)
+        
+        #add button
+        self.hlayout_button = QtWidgets.QHBoxLayout()
+        self.btn = QtWidgets.QPushButton()
+        self.btn2 = QtWidgets.QPushButton()
+        self.btn.setText("Start")
+        self.btn.setStyleSheet("background-color: green; color: white;")
+        self.btn2.setText("Stop")
+        self.btn2.setStyleSheet("background-color: red; color: white;")
+        self.btn.clicked.connect(self.save_csv)
+        self.hlayout_button.addWidget(self.btn)
+        self.hlayout_button.addWidget(self.btn2)
+        self.lyt.addLayout(self.hlayout_button)
         #1st fig
         # 2. Place the matplotlib figure
         self.myFig = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=20)
@@ -92,20 +107,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.myFig2 = AccelaretionFigureCanvas(x_len=200, y_range=[0, 100], interval=20)
         self.lyt.addWidget(self.myFig2)
         #3rd fig
-        self.myFig3 = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=20)
+        self.myFig3 = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
         self.lyt.addWidget(self.myFig3)
         #4th fig
-        self.myFig4 = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=20)
+        self.myFig4 = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
         self.lyt.addWidget(self.myFig4)
         #connect comport
         self.ser = serial.Serial("COM5",baudrate=9600,timeout=1)
         #label update thread
-        label_change_thread = threading.Thread(target=change_label,
+        self.label_change_thread = threading.Thread(target=change_label,
                              args=(self.label_air_name,self.ser), name='change_label')
-        label_change_thread.start()
+        self.label_change_thread.start()
         # 3. Show
         self.show()
         return
+    def save_csv(self):
+        print("clicked")
 #ploting for air pressure
 class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
     '''
@@ -209,4 +226,7 @@ def get_next_datapoint():
 if __name__ == "__main__":
     qapp = QtWidgets.QApplication(sys.argv)
     app = ApplicationWindow()
+    #global alive_change_label_thread
     qapp.exec_()
+    alive_change_label_thread = False
+    app.ser.close()
