@@ -85,6 +85,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.label_mission_time_name.setText("Time: 0sec")
         self.hlayout.addWidget(self.label_mission_time_name)
         self.lyt.addLayout(self.hlayout)
+        #label team_id,altitude,software_state
+        self.hlayout_1 = QtWidgets.QHBoxLayout()
+        self.team_id = QtWidgets.QLabel()
+        self.team_id.setText("Team id: #1")
+        self.altitude = QtWidgets.QLabel()
+        self.altitude.setText("Altitude: 0m")
+        self.soft_state = QtWidgets.QLabel()
+        self.soft_state.setText("Soft_state: not deployed")
+        self.hlayout_1.addWidget(self.team_id)
+        self.hlayout_1.addWidget(self.altitude)
+        self.hlayout_1.addWidget(self.soft_state)
+        self.lyt.addLayout(self.hlayout_1)
         
         #add csv button
         self.hlayout_button = QtWidgets.QHBoxLayout()
@@ -132,6 +144,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.show()
         return
     def save_csv(self):
+        self.soft_state.setText("Soft_state: deployed")
         print("clicked")
 #ploting for air pressure
 class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
