@@ -145,6 +145,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         return
     def save_csv(self):
         self.soft_state.setText("Soft_state: deployed")
+        self.ser.write(b"1")
         print("clicked")
 #ploting for air pressure
 class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
