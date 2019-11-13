@@ -27,20 +27,79 @@ import numpy as np
 import threading
 import serial
 
+
+ser=None
 alive_change_label_thread = True
-air_pres = 10
+air_pres = 0
 accleration = 0
-def change_label(obj,ser):
+team_id=0
+mission_time = 0
+altitude = 0
+tempreature=0
+altitude_=0
+speed_=0
+state_=""
+def change_label(id_t,miss_t,alt_t,pres_t,temp_t,vt_t,gps_t,speed_t,state_t,ser):
     global air_pres,accleration,alive_change_label_thread
     while True and alive_change_label_thread:
         data = ser.readline().decode("utf-8")
         df = data.split(",")
-        if df != ['']:
-            #global air_pres,accleration
+        if df != [''] and len(df) == 10:
+            id_t.setText(df[0])
+            mt = "Mission time: 0 msec"
+            miss_t.setText(mt)
+            alti="Altitude: "+df[1]+"m"
+            alt_t.setText(alti)
+            air_pres= float(df[2])/10000
+            pre="Pressure: "+df[2]+"pa"
+            pres_t.setText(pre)
+            temp ="Tempreature: "+df[3]+"'c"
+            temp_t.setText(temp)
+            vt = "Voltage :"+df[4]+"v"
+            vt_t.setText(vt)
+            gps_ = "Gps: long: "+df[5]+"\n"+"lat: "+df[6]+"\n"+"time: "+df[7]+"sec"
+            gps_t.setText(gps_)
+            spee ="Speed: "+df[8]+"m/s"
+            speed_t.setText(spee)
+            stat = "Soft state: "+df[9]
+            state_t.setText(stat)
+        if df != [''] and len(df) == 11:
+            #global air_pres,accleration,id,altitude,temp,speed,state
+            '''
+            team_id = df[0]
+            mission_time = "nan"
+            altitude_ = df[1]
+            air_pres = df[2]
+            tempreature=df[3]
+            speed_=df[4]
+            sate_=df[5]
+            '''
+            id_t.setText(df[0])
+            mt = "Mission time: "+df[1]+"msec"
+            miss_t.setText(mt)
+            alti="Altitude: "+df[2]+"m"
+            alt_t.setText(alti)
+            air_pres= float(df[3])/1000
+            pre="Pressure: "+df[3]+"pa"
+            pres_t.setText(pre)
+            temp ="Tempreature: "+df[4]+"'c"
+            temp_t.setText(temp)
+            vt = "Voltage :"+df[5]+"v"
+            vt_t.setText(vt)
+            gps_ = "Gps: long: "+df[6]+"\n"+"lat: "+df[7]+"\n"+"time: "+df[8]+"sec"
+            gps_t.setText(gps_)
+            spee ="Speed: "+df[9]+"m/s"
+            speed_t.setText(spee)
+            stat = "Soft state: "+df[10]
+            state_t.setText(stat)
+            
+            
+            '''
             accleration = float(df[1])
             air_pres = int(df[0])
             print(air_pres)
             obj.setText(df[0])
+            '''
     print("change_label exited")
 
 def get_next_accelaretion_datapoint():
@@ -92,7 +151,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.altitude = QtWidgets.QLabel()
         self.altitude.setText("Altitude: 0m")
         self.soft_state = QtWidgets.QLabel()
-        self.soft_state.setText("Soft_state: not deployed")
+        self.soft_state.setText("Soft_state: nan")
         self.hlayout_1.addWidget(self.team_id)
         self.hlayout_1.addWidget(self.altitude)
         self.hlayout_1.addWidget(self.soft_state)
@@ -112,16 +171,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.btn2.setText("Stop")
         self.btn2.setStyleSheet("background-color: red; color: white;")
         self.btn.clicked.connect(self.save_csv)
+        self.btn2.clicked.connect(self.stop_csv)
         self.hlayout_button.addWidget(self.btn)
         self.hlayout_button.addWidget(self.btn2)
         self.lyt.addLayout(self.hlayout_button)
         #1st fig
         # 2. Place the matplotlib figure
-        self.myFig = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=20)
+        self.myFig = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
         self.lyt.addWidget(self.myFig)
         #2nd fig
         # 2. Place the matplotlib figure
-        self.myFig2 = AccelaretionFigureCanvas(x_len=200, y_range=[0, 100], interval=20)
+        self.myFig2 = AccelaretionFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
         self.lyt.addWidget(self.myFig2)
         #3rd fig
         self.myFig3 = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
@@ -130,12 +190,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.myFig4 = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
         self.lyt.addWidget(self.myFig4)
         #connect comport
-        self.ser=None
         try:
-            self.ser = serial.Serial("COM5",baudrate=9600,timeout=1)
+            global ser
+            ser = serial.Serial("COM3",baudrate=9600,timeout=1)
             #label update thread
             self.label_change_thread = threading.Thread(target=change_label,
-                             args=(self.label_air_name,self.ser), name='change_label')
+                             args=(self.team_id,self.label_mission_time_name,
+                                   self.altitude,
+                                   self.label_air_name,self.label_temp_name,
+                                   self.label_battary_name,self.label_gps_name,
+                                   self.label_speed_name,
+                                   self.soft_state,
+                                   ser), name='change_label')
             self.label_change_thread.start()
         except:
             self.csv_stat_label.setText("Error: Try reconnecting arduino and restart")
@@ -144,9 +210,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.show()
         return
     def save_csv(self):
-        self.soft_state.setText("Soft_state: deployed")
-        self.ser.write(b"1")
+        #self.soft_state.setText("Soft_state: deployed")
+        global ser
+        ser.write(b"on")
         print("clicked")
+    def stop_csv(self):
+        global ser
+        ser.write(b"off")
 #ploting for air pressure
 class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
     '''
@@ -253,5 +323,6 @@ if __name__ == "__main__":
     #global alive_change_label_thread
     qapp.exec_()
     alive_change_label_thread = False
-    if app.ser != None:
-        app.ser.close()
+    if ser != None:
+        ser.close()
+        print("serial closed")
