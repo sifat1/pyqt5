@@ -26,25 +26,28 @@ import matplotlib.animation as anim
 import numpy as np
 import threading
 import serial
+import csv
 
 
 ser=None
 alive_change_label_thread = True
-air_pres = 0
-accleration = 0
+air_pres = 0.0
+accleration = 0.0
 team_id=0
-mission_time = 0
-altitude = 0
-tempreature=0
-altitude_=0
-speed_=0
+mission_time = 0.0
+altitude = 0.0
+tempreature=0.0
+altitude_=0.0
+speed_=0.0
 state_=""
+volt_=0.0
+csv_save_state=False
 def change_label(id_t,miss_t,alt_t,pres_t,temp_t,vt_t,gps_t,speed_t,state_t,ser):
-    global air_pres,accleration,alive_change_label_thread
+    global air_pres,accleration,alive_change_label_thread,csv_save_state,speed_,tempreature,volt_
     while True and alive_change_label_thread:
         data = ser.readline().decode("utf-8")
         df = data.split(",")
-        if df != [''] and len(df) == 10:
+        if df != [''] and len(df) == 10 and not "migo" in df[1]:
             id_t.setText(df[0])
             mt = "Mission time: 0 msec"
             miss_t.setText(mt)
@@ -54,16 +57,29 @@ def change_label(id_t,miss_t,alt_t,pres_t,temp_t,vt_t,gps_t,speed_t,state_t,ser)
             pre="Pressure: "+df[2]+"pa"
             pres_t.setText(pre)
             temp ="Tempreature: "+df[3]+"'c"
+            tempreature=df[3]
             temp_t.setText(temp)
             vt = "Voltage :"+df[4]+"v"
+            volt_=df[4]
             vt_t.setText(vt)
-            gps_ = "Gps: long: "+df[5]+"\n"+"lat: "+df[6]+"\n"+"time: "+df[7]+"sec"
+            gps_ = "Gps: lat: "+df[5]+"\n"+"long: "+df[6]+"\n"+"time: "+df[7]+"sec"
             gps_t.setText(gps_)
             spee ="Speed: "+df[8]+"m/s"
+            speed_ = df[8]
             speed_t.setText(spee)
             stat = "Soft state: "+df[9]
             state_t.setText(stat)
-        if df != [''] and len(df) == 11:
+            if csv_save_state == True:
+                csv.register_dialect('myDialect',
+                                     quoting=csv.QUOTE_ALL,
+                                     skipinitialspace=True)
+
+                with open('demo.csv','a', newline='') as f:
+                    writer = csv.writer(f, dialect='myDialect')
+                    writer.writerow([df[0],'0',df[1],df[2],df[3],
+                     df[4],df[5],df[6],df[7],df[8],df[9]])
+                f.close()
+        if df != [''] and len(df) == 11 and not "migo" in df[1]:
             #global air_pres,accleration,id,altitude,temp,speed,state
             '''
             team_id = df[0]
@@ -83,16 +99,28 @@ def change_label(id_t,miss_t,alt_t,pres_t,temp_t,vt_t,gps_t,speed_t,state_t,ser)
             pre="Pressure: "+df[3]+"pa"
             pres_t.setText(pre)
             temp ="Tempreature: "+df[4]+"'c"
+            tempreature=df[4]
             temp_t.setText(temp)
             vt = "Voltage :"+df[5]+"v"
+            volt_=df[5]
             vt_t.setText(vt)
             gps_ = "Gps: long: "+df[6]+"\n"+"lat: "+df[7]+"\n"+"time: "+df[8]+"sec"
             gps_t.setText(gps_)
             spee ="Speed: "+df[9]+"m/s"
+            speed_ = df[9]
             speed_t.setText(spee)
             stat = "Soft state: "+df[10]
             state_t.setText(stat)
-            
+            if csv_save_state == True:
+                csv.register_dialect('myDialect',
+                                     quoting=csv.QUOTE_ALL,
+                                     skipinitialspace=True)
+
+                with open('demo.csv','a', newline='') as f:
+                    writer = csv.writer(f, dialect='myDialect')
+                    writer.writerow([df[0],df[1],df[2],df[3],
+                     df[4],df[5],df[6],df[7],df[8],df[9],df[10]])
+                f.close()
             
             '''
             accleration = float(df[1])
@@ -102,11 +130,15 @@ def change_label(id_t,miss_t,alt_t,pres_t,temp_t,vt_t,gps_t,speed_t,state_t,ser)
             '''
     print("change_label exited")
 
-def get_next_accelaretion_datapoint():
-    return float(accleration)
+def get_next_speed_datapoint():
+    return float(speed_)
 def get_next_datapoint():
     print(air_pres)
     return float(air_pres)
+def get_next_voltage_datapoint():
+    return float(accleration)
+def get_next_temp_datapoint():
+    return float(tempreature)
 
 class ApplicationWindow(QtWidgets.QMainWindow):
     '''
@@ -181,14 +213,25 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.lyt.addWidget(self.myFig)
         #2nd fig
         # 2. Place the matplotlib figure
-        self.myFig2 = AccelaretionFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
+        self.myFig2 = SpeedFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
         self.lyt.addWidget(self.myFig2)
         #3rd fig
-        self.myFig3 = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
+        self.myFig3 = tempFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
         self.lyt.addWidget(self.myFig3)
         #4th fig
-        self.myFig4 = MyFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
+        self.myFig4 = voltageFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
         self.lyt.addWidget(self.myFig4)
+        #create csv file
+        csv.register_dialect('myDialect',
+                             quoting=csv.QUOTE_ALL,
+                             skipinitialspace=True)
+
+        with open('demo.csv','w', newline='') as f:
+            writer = csv.writer(f, dialect='myDialect')
+            writer.writerow(['id','Mission Time(sec)','Altitude(m)','Air Pressure(kpa)','Tempreature(degree celcias)',
+                     'Voltage(volt)','Latitude','Longitude','Gps time','Speed(m/s)','Software State'])
+
+        f.close()
         #connect comport
         try:
             global ser
@@ -211,11 +254,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         return
     def save_csv(self):
         #self.soft_state.setText("Soft_state: deployed")
-        global ser
+        global ser,csv_save_state
         ser.write(b"on")
+        csv_save_state=True
+        self.csv_stat_label.setText("Csv data saving!")
+        self.csv_stat_label.setStyleSheet("color: green;")
         print("clicked")
     def stop_csv(self):
-        global ser
+        global ser,csv_save_state
+        csv_save_state=False
+        self.csv_stat_label.setText("Csv data stopped saving!")
         ser.write(b"off")
 #ploting for air pressure
 class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
@@ -259,8 +307,8 @@ class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
         y = y[-self._x_len_:]                        # Truncate list _y_
         self._line_.set_ydata(y)
         return self._line_,
-#plotting for accelaretion
-class AccelaretionFigureCanvas(FigureCanvas, anim.FuncAnimation):
+#plotting for temp
+class tempFigureCanvas(FigureCanvas, anim.FuncAnimation):
     '''
     This is the FigureCanvas in which the live plot is drawn.
 
@@ -284,7 +332,7 @@ class AccelaretionFigureCanvas(FigureCanvas, anim.FuncAnimation):
         # Store a figure and ax
         self._ax_  = self.figure.subplots()
         self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1])
-        self._line_, = self._ax_.plot(x, y,label='Accelaretion')    
+        self._line_, = self._ax_.plot(x, y,label='Temperature')    
         self._ax_.legend()
 
         # Call superclass constructors
@@ -297,7 +345,93 @@ class AccelaretionFigureCanvas(FigureCanvas, anim.FuncAnimation):
 
         '''
         #y.append(round(get_next_datapoint(), 2))     # Add new datapoint
-        y.append(round(get_next_accelaretion_datapoint(), 2)) 
+        y.append(round(get_next_temp_datapoint(), 2)) 
+        y = y[-self._x_len_:]                        # Truncate list _y_
+        self._line_.set_ydata(y)
+        return self._line_,
+
+#plotting for voltage
+class voltageFigureCanvas(FigureCanvas, anim.FuncAnimation):
+    '''
+    This is the FigureCanvas in which the live plot is drawn.
+
+    '''
+    def __init__(self, x_len:int, y_range:List, interval:int) -> None:
+        '''
+        :param x_len:       The nr of data points shown in one plot.
+        :param y_range:     Range on y-axis.
+        :param interval:    Get a new datapoint every .. milliseconds.
+
+        '''
+        FigureCanvas.__init__(self, mpl_fig.Figure())
+        # Range settings
+        self._x_len_ = x_len
+        self._y_range_ = y_range
+
+        # Store two lists _x_ and _y_
+        x = list(range(0, x_len))
+        y = [0] * x_len
+
+        # Store a figure and ax
+        self._ax_  = self.figure.subplots()
+        self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1])
+        self._line_, = self._ax_.plot(x, y,label='Voltage')    
+        self._ax_.legend()
+
+        # Call superclass constructors
+        anim.FuncAnimation.__init__(self, self.figure, self._update_canvas_, fargs=(y,), interval=interval, blit=True)
+        return
+
+    def _update_canvas_(self, i, y) -> None:
+        '''
+        This function gets called regularly by the timer.
+
+        '''
+        #y.append(round(get_next_datapoint(), 2))     # Add new datapoint
+        y.append(round(get_next_voltage_datapoint(), 2)) 
+        y = y[-self._x_len_:]                        # Truncate list _y_
+        self._line_.set_ydata(y)
+        return self._line_,
+
+#plotting for speed
+class SpeedFigureCanvas(FigureCanvas, anim.FuncAnimation):
+    '''
+    This is the FigureCanvas in which the live plot is drawn.
+
+    '''
+    def __init__(self, x_len:int, y_range:List, interval:int) -> None:
+        '''
+        :param x_len:       The nr of data points shown in one plot.
+        :param y_range:     Range on y-axis.
+        :param interval:    Get a new datapoint every .. milliseconds.
+
+        '''
+        FigureCanvas.__init__(self, mpl_fig.Figure())
+        # Range settings
+        self._x_len_ = x_len
+        self._y_range_ = y_range
+
+        # Store two lists _x_ and _y_
+        x = list(range(0, x_len))
+        y = [0] * x_len
+
+        # Store a figure and ax
+        self._ax_  = self.figure.subplots()
+        self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1])
+        self._line_, = self._ax_.plot(x, y,label='Speed')    
+        self._ax_.legend()
+
+        # Call superclass constructors
+        anim.FuncAnimation.__init__(self, self.figure, self._update_canvas_, fargs=(y,), interval=interval, blit=True)
+        return
+
+    def _update_canvas_(self, i, y) -> None:
+        '''
+        This function gets called regularly by the timer.
+
+        '''
+        #y.append(round(get_next_datapoint(), 2))     # Add new datapoint
+        y.append(round(get_next_speed_datapoint(), 2)) 
         y = y[-self._x_len_:]                        # Truncate list _y_
         self._line_.set_ydata(y)
         return self._line_,
