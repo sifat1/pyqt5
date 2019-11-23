@@ -39,63 +39,30 @@ altitude = 0.0
 tempreature=0.0
 altitude_=0.0
 speed_=0.0
-state_=""
+state_="not deployed"
 volt_=0.0
 csv_save_state=False
+count=1
+btn_state=True
 def change_label(id_t,miss_t,alt_t,pres_t,temp_t,vt_t,gps_t,speed_t,state_t,ser):
-    global air_pres,accleration,alive_change_label_thread,csv_save_state,speed_,tempreature,volt_
+    global air_pres,accleration,alive_change_label_thread,csv_save_state,speed_,tempreature,volt_,state_,volt_,count
     while True and alive_change_label_thread:
+        #if state_ == "deployed":
+            #print("sending data")
+            #ser.write(1)
+            #print()
         data = ser.readline().decode("utf-8")
         df = data.split(",")
-        if df != [''] and len(df) == 10 and not "migo" in df[1]:
-            id_t.setText(df[0])
-            mt = "Mission time: 0 msec"
-            miss_t.setText(mt)
-            alti="Altitude: "+df[1]+"m"
-            alt_t.setText(alti)
-            air_pres= float(df[2])/10000
-            pre="Pressure: "+df[2]+"pa"
-            pres_t.setText(pre)
-            temp ="Tempreature: "+df[3]+"'c"
-            tempreature=df[3]
-            temp_t.setText(temp)
-            vt = "Voltage :"+df[4]+"v"
-            volt_=df[4]
-            vt_t.setText(vt)
-            gps_ = "Gps: lat: "+df[5]+"\n"+"long: "+df[6]+"\n"+"time: "+df[7]+"sec"
-            gps_t.setText(gps_)
-            spee ="Speed: "+df[8]+"m/s"
-            speed_ = df[8]
-            speed_t.setText(spee)
-            stat = "Soft state: "+df[9]
-            state_t.setText(stat)
-            if csv_save_state == True:
-                csv.register_dialect('myDialect',
-                                     quoting=csv.QUOTE_ALL,
-                                     skipinitialspace=True)
-
-                with open('demo.csv','a', newline='') as f:
-                    writer = csv.writer(f, dialect='myDialect')
-                    writer.writerow([df[0],'0',df[1],df[2],df[3],
-                     df[4],df[5],df[6],df[7],df[8],df[9]])
-                f.close()
-        if df != [''] and len(df) == 11 and not "migo" in df[1]:
-            #global air_pres,accleration,id,altitude,temp,speed,state
-            '''
-            team_id = df[0]
-            mission_time = "nan"
-            altitude_ = df[1]
-            air_pres = df[2]
-            tempreature=df[3]
-            speed_=df[4]
-            sate_=df[5]
-            '''
-            id_t.setText(df[0])
-            mt = "Mission time: "+df[1]+"msec"
+        print(df)
+        if df != [''] and len(df) == 10:
+            id_t.setText(df[1])
+            if df[0]=="start":
+                count+=1
+            mt = "Mission time:"+str(count)+"sec"
             miss_t.setText(mt)
             alti="Altitude: "+df[2]+"m"
             alt_t.setText(alti)
-            air_pres= float(df[3])/1000
+            air_pres= float(df[3])/10000
             pre="Pressure: "+df[3]+"pa"
             pres_t.setText(pre)
             temp ="Tempreature: "+df[4]+"'c"
@@ -104,13 +71,18 @@ def change_label(id_t,miss_t,alt_t,pres_t,temp_t,vt_t,gps_t,speed_t,state_t,ser)
             vt = "Voltage :"+df[5]+"v"
             volt_=df[5]
             vt_t.setText(vt)
-            gps_ = "Gps: long: "+df[6]+"\n"+"lat: "+df[7]+"\n"+"time: "+df[8]+"sec"
+            gps_ = "Gps: lat: "+df[6]+"\n"+"long: "+df[7]+"\n"+"time: "+df[8]+"sec"
             gps_t.setText(gps_)
-            spee ="Speed: "+df[9]+"m/s"
-            speed_ = df[9]
+            #speed_=0.0
+            speed_ = round((float(df[2])/count)*(-1),2)
+            spee ="Speed: "+str(speed_)+"m/s"
+            #spee ="Speed: "+"0"+"m/s"
             speed_t.setText(spee)
-            stat = "Soft state: "+df[10]
-            state_t.setText(stat)
+            if btn_state==False:
+                stat = "Soft state: "+" deployed"
+                state_t.setText(stat)
+            else:
+                state_t.setText("Soft state: not deployed")
             if csv_save_state == True:
                 csv.register_dialect('myDialect',
                                      quoting=csv.QUOTE_ALL,
@@ -118,16 +90,10 @@ def change_label(id_t,miss_t,alt_t,pres_t,temp_t,vt_t,gps_t,speed_t,state_t,ser)
 
                 with open('demo.csv','a', newline='') as f:
                     writer = csv.writer(f, dialect='myDialect')
-                    writer.writerow([df[0],df[1],df[2],df[3],
-                     df[4],df[5],df[6],df[7],df[8],df[9],df[10]])
+                    writer.writerow([df[1],count,df[2],df[3],df[4],
+                     df[5],df[6],df[7],df[8],speed_,df[9]])
                 f.close()
-            
-            '''
-            accleration = float(df[1])
-            air_pres = int(df[0])
-            print(air_pres)
-            obj.setText(df[0])
-            '''
+
     print("change_label exited")
 
 def get_next_speed_datapoint():
@@ -136,7 +102,7 @@ def get_next_datapoint():
     print(air_pres)
     return float(air_pres)
 def get_next_voltage_datapoint():
-    return float(accleration)
+    return float(volt_)
 def get_next_temp_datapoint():
     return float(tempreature)
 
@@ -158,7 +124,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         #labels 1
         self.hlayout = QtWidgets.QHBoxLayout()
         self.label_air_name = QtWidgets.QLabel()
-        self.label_air_name.setText("Air pressure")
+        self.label_air_name.setText("Air pressure: nan")
         self.hlayout.addWidget(self.label_air_name)
         self.label_gps_name = QtWidgets.QLabel()
         self.label_gps_name.setText("Gps: 0 e 0w")
@@ -188,7 +154,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hlayout_1.addWidget(self.altitude)
         self.hlayout_1.addWidget(self.soft_state)
         self.lyt.addLayout(self.hlayout_1)
-        
+
         #add csv button
         self.hlayout_button = QtWidgets.QHBoxLayout()
         #csv status label
@@ -198,14 +164,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hlayout_button.addWidget(self.csv_stat_label)
         self.btn = QtWidgets.QPushButton()
         self.btn2 = QtWidgets.QPushButton()
-        self.btn.setText("Start")
+        self.btn3 = QtWidgets.QPushButton()
+        self.btn.setText("Start CSV")
         self.btn.setStyleSheet("background-color: green; color: white;")
         self.btn2.setText("Stop")
         self.btn2.setStyleSheet("background-color: red; color: white;")
+        self.btn3.setText("Start Mission")
+        self.btn3.setStyleSheet("background-color: #F89804; color: white;")
         self.btn.clicked.connect(self.save_csv)
         self.btn2.clicked.connect(self.stop_csv)
+        self.btn3.clicked.connect(self.set_mission)
         self.hlayout_button.addWidget(self.btn)
         self.hlayout_button.addWidget(self.btn2)
+        self.hlayout_button.addWidget(self.btn3)
         self.lyt.addLayout(self.hlayout_button)
         #1st fig
         # 2. Place the matplotlib figure
@@ -213,13 +184,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.lyt.addWidget(self.myFig)
         #2nd fig
         # 2. Place the matplotlib figure
-        self.myFig2 = SpeedFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
+        self.myFig2 = SpeedFigureCanvas(x_len=200, y_range=[0, 15], interval=200)
         self.lyt.addWidget(self.myFig2)
         #3rd fig
-        self.myFig3 = tempFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
+        self.myFig3 = tempFigureCanvas(x_len=200, y_range=[0, 50], interval=200)
         self.lyt.addWidget(self.myFig3)
         #4th fig
-        self.myFig4 = voltageFigureCanvas(x_len=200, y_range=[0, 100], interval=200)
+        self.myFig4 = voltageFigureCanvas(x_len=200, y_range=[0, 10], interval=200)
         self.lyt.addWidget(self.myFig4)
         #create csv file
         csv.register_dialect('myDialect',
@@ -254,17 +225,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         return
     def save_csv(self):
         #self.soft_state.setText("Soft_state: deployed")
-        global ser,csv_save_state
-        ser.write(b"on")
+        global ser,csv_save_state,state_,btn_state
+        state_="deployed"
         csv_save_state=True
         self.csv_stat_label.setText("Csv data saving!")
         self.csv_stat_label.setStyleSheet("color: green;")
         print("clicked")
     def stop_csv(self):
-        global ser,csv_save_state
+        global ser,csv_save_state,btn_state
+        btn_state=True
         csv_save_state=False
         self.csv_stat_label.setText("Csv data stopped saving!")
-        ser.write(b"off")
+        self.csv_stat_label.setStyleSheet("color: red;")
+        #ser.write(b"off")
+        state_="not deployed"
+    def set_mission(self):
+        global count,btn_state
+        btn_state=False
+        count=1
+        self.csv_stat_label.setText("Mission started!")
+        self.csv_stat_label.setStyleSheet("color: #F89804;")
 #ploting for air pressure
 class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
     '''
@@ -303,7 +283,7 @@ class MyFigureCanvas(FigureCanvas, anim.FuncAnimation):
 
         '''
         #y.append(round(get_next_datapoint(), 2))     # Add new datapoint
-        y.append(round(get_next_datapoint(), 2)) 
+        y.append(round(get_next_datapoint(), 2))
         y = y[-self._x_len_:]                        # Truncate list _y_
         self._line_.set_ydata(y)
         return self._line_,
@@ -332,7 +312,7 @@ class tempFigureCanvas(FigureCanvas, anim.FuncAnimation):
         # Store a figure and ax
         self._ax_  = self.figure.subplots()
         self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1])
-        self._line_, = self._ax_.plot(x, y,label='Temperature')    
+        self._line_, = self._ax_.plot(x, y,label='Temperature')
         self._ax_.legend()
 
         # Call superclass constructors
@@ -345,7 +325,7 @@ class tempFigureCanvas(FigureCanvas, anim.FuncAnimation):
 
         '''
         #y.append(round(get_next_datapoint(), 2))     # Add new datapoint
-        y.append(round(get_next_temp_datapoint(), 2)) 
+        y.append(round(get_next_temp_datapoint(), 2))
         y = y[-self._x_len_:]                        # Truncate list _y_
         self._line_.set_ydata(y)
         return self._line_,
@@ -375,7 +355,7 @@ class voltageFigureCanvas(FigureCanvas, anim.FuncAnimation):
         # Store a figure and ax
         self._ax_  = self.figure.subplots()
         self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1])
-        self._line_, = self._ax_.plot(x, y,label='Voltage')    
+        self._line_, = self._ax_.plot(x, y,label='Voltage')
         self._ax_.legend()
 
         # Call superclass constructors
@@ -388,7 +368,7 @@ class voltageFigureCanvas(FigureCanvas, anim.FuncAnimation):
 
         '''
         #y.append(round(get_next_datapoint(), 2))     # Add new datapoint
-        y.append(round(get_next_voltage_datapoint(), 2)) 
+        y.append(round(get_next_voltage_datapoint(), 2))
         y = y[-self._x_len_:]                        # Truncate list _y_
         self._line_.set_ydata(y)
         return self._line_,
@@ -418,7 +398,7 @@ class SpeedFigureCanvas(FigureCanvas, anim.FuncAnimation):
         # Store a figure and ax
         self._ax_  = self.figure.subplots()
         self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1])
-        self._line_, = self._ax_.plot(x, y,label='Speed')    
+        self._line_, = self._ax_.plot(x, y,label='Speed')
         self._ax_.legend()
 
         # Call superclass constructors
@@ -431,7 +411,7 @@ class SpeedFigureCanvas(FigureCanvas, anim.FuncAnimation):
 
         '''
         #y.append(round(get_next_datapoint(), 2))     # Add new datapoint
-        y.append(round(get_next_speed_datapoint(), 2)) 
+        y.append(round(get_next_speed_datapoint(), 2))
         y = y[-self._x_len_:]                        # Truncate list _y_
         self._line_.set_ydata(y)
         return self._line_,
@@ -448,7 +428,7 @@ def get_next_datapoint():
         i = 0
     print(d[i])
     return d[i]
-    
+
 '''
 
 if __name__ == "__main__":
